@@ -1,0 +1,340 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Viewer profile account data",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 150 },
+        "avatar": { "type": "string" },
+        "role": { "type": "string", "enum": ["user"] },
+        "tier": { "type": "string", "enum": ["Bronze", "Silver", "Gold", "Diamond"] },
+        "points": { "type": "number" },
+        "totalEarnedPoints": { "type": "number" },
+        "pendingPoints": { "type": "number" },
+        "redeemedPoints": { "type": "number" },
+        "watchStreak": { "type": "number" },
+        "totalVideosWatched": { "type": "number" },
+        "country": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "suspended"] },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "name", "email", "role", "status"]
+    },
+    "Vendor": {
+      "title": "Vendor",
+      "description": "Advertiser and content vendor account profile",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "companyName": { "type": "string", "maxLength": 120 },
+        "contactName": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 150 },
+        "avatar": { "type": "string" },
+        "role": { "type": "string", "enum": ["vendor"] },
+        "balance": { "type": "number" },
+        "totalSpent": { "type": "number" },
+        "activeCampaignsCount": { "type": "number" },
+        "totalCampaignsCount": { "type": "number" },
+        "status": { "type": "string", "enum": ["verified", "pending", "suspended"] },
+        "joinedDate": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "companyName", "contactName", "email", "role", "status"]
+    },
+    "Admin": {
+      "title": "Admin",
+      "description": "Platform administrator authorization record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "email", "role"]
+    },
+    "Campaign": {
+      "title": "Campaign",
+      "description": "Promoted video campaign entity",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string", "maxLength": 200 },
+        "vendorId": { "type": "string" },
+        "vendorName": { "type": "string" },
+        "platform": { "type": "string", "enum": ["youtube", "tiktok", "vimeo", "instagram", "x"] },
+        "videoUrl": { "type": "string" },
+        "thumbnail": { "type": "string" },
+        "category": { "type": "string" },
+        "durationSeconds": { "type": "number" },
+        "requiredWatchSeconds": { "type": "number" },
+        "videoLengthMinutes": { "type": "number" },
+        "totalTargetWatchMinutes": { "type": "number" },
+        "totalWatchedMinutes": { "type": "number" },
+        "pointsPerMinute": { "type": "number" },
+        "requiredTotalPoints": { "type": "number" },
+        "rewardPoints": { "type": "number" },
+        "budgetTotal": { "type": "number" },
+        "budgetSpent": { "type": "number" },
+        "targetViews": { "type": "number" },
+        "currentViews": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "approved", "active", "rejected", "expired"] },
+        "isVisibleToUsers": { "type": "boolean" },
+        "rejectionReason": { "type": "string" },
+        "geoTargets": { "type": "array" },
+        "campaignDuration": { "type": "string" },
+        "startDate": { "type": "string" },
+        "expirationDate": { "type": "string" },
+        "targetAudience": { "type": "string" },
+        "feedbackQuestions": { "type": "array" },
+        "quizQuestions": { "type": "array" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "title", "vendorId", "platform", "videoUrl", "status"]
+    },
+    "CampaignFeedback": {
+      "title": "CampaignFeedback",
+      "description": "Viewer ratings and commentary on campaigns",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "campaignId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "country": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "campaignId", "userId", "rating"]
+    },
+    "CampaignQuiz": {
+      "title": "CampaignQuiz",
+      "description": "Comprehension challenge question for anti-bot validation",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "campaignId": { "type": "string" },
+        "question": { "type": "string", "maxLength": 300 },
+        "options": { "type": "array" },
+        "correctIndex": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "campaignId", "question", "options", "correctIndex"]
+    },
+    "UserTask": {
+      "title": "UserTask",
+      "description": "User activity completion session record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "campaignId": { "type": "string" },
+        "campaignTitle": { "type": "string" },
+        "platform": { "type": "string" },
+        "activityType": { "type": "string", "enum": ["feedback", "quiz", "survey", "review", "watch_reward"] },
+        "activityName": { "type": "string" },
+        "watchedAt": { "type": "string" },
+        "durationWatched": { "type": "number" },
+        "pointsEarned": { "type": "number" },
+        "status": { "type": "string", "enum": ["completed", "in_review", "failed"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "campaignId", "pointsEarned", "status"]
+    },
+    "UserWallet": {
+      "title": "UserWallet",
+      "description": "Authoritative user point ledger and spendable balance",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "points": { "type": "number" },
+        "totalEarnedPoints": { "type": "number" },
+        "pendingPoints": { "type": "number" },
+        "redeemedPoints": { "type": "number" },
+        "cashValueUsd": { "type": "number" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["userId", "points", "totalEarnedPoints"]
+    },
+    "PointTransaction": {
+      "title": "PointTransaction",
+      "description": "Itemized record of point credits and debits",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "type": { "type": "string", "enum": ["watch_reward", "streak_bonus", "referral_bonus", "redemption", "admin_adjustment"] },
+        "activityName": { "type": "string" },
+        "points": { "type": "number" },
+        "description": { "type": "string", "maxLength": 250 },
+        "timestamp": { "type": "string" },
+        "status": { "type": "string", "enum": ["credited", "debited", "pending"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "type", "points", "status"]
+    },
+    "RedemptionRequest": {
+      "title": "RedemptionRequest",
+      "description": "User cashout and reward redemption payout request",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "method": { "type": "string", "enum": ["bkash", "nagad", "rocket", "paypal", "amazon", "crypto"] },
+        "pointsUsed": { "type": "number" },
+        "cashValueBdt": { "type": "number" },
+        "cashValueUsd": { "type": "number" },
+        "payoutAddress": { "type": "string", "maxLength": 200 },
+        "whatsappNumber": { "type": "string" },
+        "accountType": { "type": "string", "enum": ["Personal", "Agent", "Merchant", "personal", "agent"] },
+        "transactionRef": { "type": "string" },
+        "requestedAt": { "type": "string" },
+        "paidAt": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "paid", "rejected", "processing", "completed"] },
+        "rejectionReason": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "method", "pointsUsed", "payoutAddress", "status"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "Broadcast and user system notices",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string", "maxLength": 150 },
+        "message": { "type": "string", "maxLength": 500 },
+        "targetRole": { "type": "string", "enum": ["all", "user", "vendor", "admin"] },
+        "createdAt": { "type": "string" },
+        "read": { "type": "boolean" },
+        "type": { "type": "string", "enum": ["system", "reward", "campaign", "security"] }
+      },
+      "required": ["id", "title", "message", "targetRole"]
+    },
+    "PlatformSettings": {
+      "title": "PlatformSettings",
+      "description": "Platform global configuration",
+      "type": "object",
+      "properties": {
+        "siteName": { "type": "string" },
+        "contactEmail": { "type": "string" },
+        "pointsToUsdRate": { "type": "number" },
+        "pointsToBdtRate": { "type": "number" },
+        "minimumRedemptionPoints": { "type": "number" },
+        "pointsPerMinuteDefault": { "type": "number" },
+        "dailyStreakBonus": { "type": "number" },
+        "antiBotWatchTolerancePercent": { "type": "number" },
+        "maintenanceMode": { "type": "boolean" },
+        "allowedPlatforms": { "type": "array" },
+        "activityPoints": { "type": "object" },
+        "adBox1": { "type": "object" },
+        "adBox2": { "type": "object" },
+        "socialBarAd": { "type": "object" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["siteName", "pointsToUsdRate", "minimumRedemptionPoints"]
+    },
+    "ActivityLog": {
+      "title": "ActivityLog",
+      "description": "System operational and security audit events",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "action": { "type": "string", "maxLength": 100 },
+        "details": { "type": "string", "maxLength": 500 },
+        "timestamp": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "action", "timestamp"]
+    },
+    "VendorPointRequest": {
+      "title": "VendorPointRequest",
+      "description": "Point purchase or collection request sent to admin with WhatsApp contact",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "vendorId": { "type": "string" },
+        "vendorName": { "type": "string" },
+        "vendorEmail": { "type": "string" },
+        "pointsRequested": { "type": "number" },
+        "whatsappNumber": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "createdAt": { "type": "string" },
+        "approvedAt": { "type": "string" },
+        "rejectionReason": { "type": "string" }
+      },
+      "required": ["id", "vendorId", "pointsRequested", "whatsappNumber", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Viewer profile information"
+    },
+    "/vendors/{vendorId}": {
+      "schema": "Vendor",
+      "description": "Advertiser profile and business entity details"
+    },
+    "/admins/{adminId}": {
+      "schema": "Admin",
+      "description": "Super administrator authorization index"
+    },
+    "/campaigns/{campaignId}": {
+      "schema": "Campaign",
+      "description": "Promoted video campaigns"
+    },
+    "/campaign_feedback/{feedbackId}": {
+      "schema": "CampaignFeedback",
+      "description": "Viewer ratings and feedback"
+    },
+    "/campaign_quizzes/{quizId}": {
+      "schema": "CampaignQuiz",
+      "description": "Comprehension questions for anti-bot validation"
+    },
+    "/user_tasks/{taskId}": {
+      "schema": "UserTask",
+      "description": "User activity and task completion sessions"
+    },
+    "/user_wallets/{userId}": {
+      "schema": "UserWallet",
+      "description": "User authoritative point balances"
+    },
+    "/point_transactions/{transactionId}": {
+      "schema": "PointTransaction",
+      "description": "Audit trail for all credit/debit operations"
+    },
+    "/redemption_requests/{requestId}": {
+      "schema": "RedemptionRequest",
+      "description": "Payout cashout redemption queue (bKash, Nagad, Rocket, PayPal, Crypto)"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "System notices and broadcast alerts"
+    },
+    "/platform_settings/{settingId}": {
+      "schema": "PlatformSettings",
+      "description": "Global economic, activity points, and gateway settings"
+    },
+    "/activity_logs/{logId}": {
+      "schema": "ActivityLog",
+      "description": "Audit security event logs"
+    },
+    "/vendor_point_requests/{requestId}": {
+      "schema": "VendorPointRequest",
+      "description": "Vendor point collection requests requiring admin approval"
+    }
+  }
+}

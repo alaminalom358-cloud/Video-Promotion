@@ -1,0 +1,122 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Deny All Catch-All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        request.auth.token.email == 'alaminalom358@gmail.com' ||
+        request.auth.token.email == 'alom.outsourcing2020@gmail.com'
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // 1. Users collection
+    match /users/{userId} {
+      allow get, list: if true;
+      allow create, update, delete: if true;
+    }
+
+    // 2. Vendors collection
+    match /vendors/{vendorId} {
+      allow get, list: if true;
+      allow create, update, delete: if true;
+    }
+
+    // 3. Admins collection
+    match /admins/{adminId} {
+      allow get, list: if true;
+      allow create, update, delete: if true;
+    }
+
+    // 4. Campaigns collection
+    match /campaigns/{campaignId} {
+      allow get, list: if true;
+      allow create, update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    // 5. Campaign Feedback
+    match /campaign_feedback/{feedbackId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // 6. Campaign Quizzes
+    match /campaign_quizzes/{quizId} {
+      allow get, list: if isSignedIn();
+      allow create, update: if isSignedIn() || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // 7. User Tasks (Verified Activities)
+    match /user_tasks/{taskId} {
+      allow get, list: if true;
+      allow create, update, delete: if true;
+    }
+
+    // 8. User Wallets (Authoritative Ledger)
+    match /user_wallets/{userId} {
+      allow get, list: if true;
+      allow create, update, delete: if true;
+    }
+
+    // 9. Point Transactions
+    match /point_transactions/{transactionId} {
+      allow get, list: if true;
+      allow create, update, delete: if true;
+    }
+
+    // 10. Redemption Requests (bKash, Nagad, Rocket, PayPal, Crypto)
+    match /redemption_requests/{requestId} {
+      allow get, list: if (isSignedIn() && resource.data.userId == request.auth.uid) || isAdmin();
+      allow create: if (isSignedIn() && request.resource.data.userId == request.auth.uid && request.resource.data.status == 'pending') || isAdmin();
+      // Only admin can approve, reject, or mark as paid
+      allow update, delete: if isAdmin();
+    }
+
+    // 11. Notifications
+    match /notifications/{notificationId} {
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    // 12. Platform Settings
+    match /platform_settings/{settingId} {
+      allow get, list: if true;
+      allow create, update, delete: if isSignedIn();
+    }
+
+    // 13. Activity Logs
+    match /activity_logs/{logId} {
+      allow get, list: if isSignedIn();
+      allow create: if true;
+      allow update, delete: if isSignedIn();
+    }
+
+    // 14. Vendor Point Requests
+    match /vendor_point_requests/{requestId} {
+      allow get, list: if isSignedIn();
+      allow create, update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+  }
+}
