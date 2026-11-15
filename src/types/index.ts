@@ -252,5 +252,6 @@ export interface PlatformSettings {
   adBox1?: AdBoxConfig;
   adBox2?: AdBoxConfig; // Box No-2 (width: 300px, height: 250px)
   socialBarAd?: AdBoxConfig; // Adsterra Social Bar / Popunder Ad (Shown top-right of video every 5 minutes)
+  tutorialVideoUrl?: string; // Public website How It Works tutorial YouTube video URL
   adBanners?: Record<string, AdBoxConfig>;
 }

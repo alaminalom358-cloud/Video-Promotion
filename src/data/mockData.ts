@@ -650,7 +650,8 @@ export const INITIAL_SETTINGS: PlatformSettings = {
     adLink: '',
     targetUrl: '',
     enabled: true
-  }
+  },
+  tutorialVideoUrl: ''
 };
 
 export const ROOT_ADMIN_CREDENTIALS = {

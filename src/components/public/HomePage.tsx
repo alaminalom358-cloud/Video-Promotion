@@ -16,6 +16,7 @@ import {
   Layers,
   ChevronRight
 } from 'lucide-react';
+import { TutorialVideoBox } from '../common/TutorialVideoBox';
 
 export const HomePage: React.FC = () => {
   const { campaigns, openCampaignDetail, setRole, setVendorPage, setUserPage, setPublicPage, lang, settings } = useApp();
@@ -261,6 +262,10 @@ export const HomePage: React.FC = () => {
                 ? 'একটি ভারসাম্যপূর্ণ ইকোসিস্টেম যেখানে বিজ্ঞাপনদাতার বাজেট মধ্যস্বত্বভোগী ছাড়া সরাসরি যাচাইকৃত দর্শকদের পুরস্কৃত করে।'
                 : 'A balanced ecosystem where advertiser budgets directly reward verified viewers with zero intermediary waste.'}
             </p>
+          </div>
+
+          <div className="mb-12">
+            <TutorialVideoBox />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">

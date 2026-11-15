@@ -12,6 +12,7 @@ import {
   Sparkles,
   DollarSign
 } from 'lucide-react';
+import { TutorialVideoBox } from '../common/TutorialVideoBox';
 
 export const HowItWorksPage: React.FC = () => {
   const { setRole, setVendorPage, setUserPage, setPublicPage, lang } = useApp();
@@ -71,6 +72,9 @@ export const HowItWorksPage: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {/* How It Works Tutorial Video Box */}
+        <TutorialVideoBox />
 
         {/* Dynamic Workflow (Screenshot 33) */}
         {activeTab === 'advertiser' ? (

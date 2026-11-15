@@ -1,16 +1,19 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { UserRole } from '../../types';
-import { Briefcase, UserCheck, Globe, ChevronRight } from 'lucide-react';
+import { Briefcase, UserCheck, Globe, ChevronRight, LogIn } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 
 export const RoleSwitcherBar: React.FC = () => {
   const { 
     role, 
     setRole, 
-    publicPage, 
+    publicPage,
+    setPublicPage,
     vendorPage, 
-    userPage 
+    userPage,
+    firebaseUser,
+    authenticatedRole
   } = useApp();
 
   const roles: { id: UserRole; label: string; icon: React.ReactNode; currentSub: string }[] = [
@@ -20,18 +23,26 @@ export const RoleSwitcherBar: React.FC = () => {
       icon: <Globe className="h-3.5 w-3.5" />,
       currentSub: publicPage.replace('-', ' ')
     },
-    { 
-      id: 'vendor', 
-      label: 'Vendor Portal', 
-      icon: <Briefcase className="h-3.5 w-3.5" />,
-      currentSub: vendorPage.replace('-', ' ')
-    },
-    { 
-      id: 'user', 
-      label: 'User Rewards', 
-      icon: <UserCheck className="h-3.5 w-3.5" />,
-      currentSub: userPage.replace('-', ' ')
-    }
+    ...(firebaseUser && authenticatedRole === 'vendor'
+      ? [
+          { 
+            id: 'vendor' as UserRole, 
+            label: 'Vendor Portal', 
+            icon: <Briefcase className="h-3.5 w-3.5" />,
+            currentSub: vendorPage.replace('-', ' ')
+          }
+        ]
+      : []),
+    ...(firebaseUser && authenticatedRole === 'user'
+      ? [
+          { 
+            id: 'user' as UserRole, 
+            label: 'User Rewards', 
+            icon: <UserCheck className="h-3.5 w-3.5" />,
+            currentSub: userPage.replace('-', ' ')
+          }
+        ]
+      : [])
   ];
 
   return (
@@ -49,7 +60,7 @@ export const RoleSwitcherBar: React.FC = () => {
             <button
               key={r.id}
               onClick={() => setRole(r.id)}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-md font-medium text-xs transition-all whitespace-nowrap ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-md font-medium text-xs transition-all whitespace-nowrap cursor-pointer ${
                 isActive
                   ? 'bg-purple-600 text-white shadow-sm shadow-purple-600/30'
                   : 'bg-slate-900/80 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
@@ -65,6 +76,20 @@ export const RoleSwitcherBar: React.FC = () => {
             </button>
           );
         })}
+
+        {(!firebaseUser || !authenticatedRole) && (
+          <button
+            onClick={() => {
+              setRole('public');
+              setPublicPage('login');
+            }}
+            className="flex items-center gap-1.5 px-3 py-1 rounded-md font-medium text-xs transition-all whitespace-nowrap bg-slate-900/80 text-purple-300 hover:text-white hover:bg-purple-600/30 border border-purple-500/20 cursor-pointer"
+          >
+            <LogIn className="h-3.5 w-3.5" />
+            <span>Login</span>
+          </button>
+        )}
+
         <div className="h-4 w-px bg-slate-800 mx-1 hidden sm:block" />
         <ThemeToggle variant="compact" />
       </div>

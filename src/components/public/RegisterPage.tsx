@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Play, ArrowRight, CheckCircle2, UserCheck, Briefcase, Eye, EyeOff } from 'lucide-react';
 import { LanguageSelector } from '../common/LanguageSelector';
+import { WORLD_COUNTRIES } from '../../data/countries';
 
 export const RegisterPage: React.FC = () => {
   const { 
@@ -20,7 +21,7 @@ export const RegisterPage: React.FC = () => {
     name: '',
     email: '',
     company: '',
-    country: 'United States',
+    country: '',
     password: '',
     confirmPassword: '',
     acceptTerms: true
@@ -51,44 +52,36 @@ export const RegisterPage: React.FC = () => {
 
     setLoading(true);
     try {
+      let ok = false;
       if (accountType === 'vendor') {
-        const ok = await handleFirebaseRegisterVendor(
+        ok = await handleFirebaseRegisterVendor(
           formData.company || `${formData.name} Media`,
           formData.name,
           formData.email,
           formData.password,
-          formData.country || 'United States'
+          formData.country || 'Unknown'
         );
-        if (!ok) {
-          // Fallback demo
-          setRole('vendor');
-          setVendorPage('overview');
-          showToast('Vendor registered (Demo session)', 'info');
-        }
       } else {
-        const ok = await handleFirebaseRegisterUser(
+        ok = await handleFirebaseRegisterUser(
           formData.name,
           formData.email,
           formData.password,
-          formData.country
+          formData.country || 'Unknown'
         );
-        if (!ok) {
-          // Fallback demo
-          setRole('user');
-          setUserPage('overview');
-          showToast('Viewer registered (Demo session)', 'info');
-        }
       }
-      // Security: Clear registration form fields
-      setFormData({
-        name: '',
-        email: '',
-        company: '',
-        country: 'United States',
-        password: '',
-        confirmPassword: '',
-        acceptTerms: true
-      });
+
+      if (ok) {
+        // Security: Clear registration form fields
+        setFormData({
+          name: '',
+          email: '',
+          company: '',
+          country: '',
+          password: '',
+          confirmPassword: '',
+          acceptTerms: true
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -155,7 +148,8 @@ export const RegisterPage: React.FC = () => {
                 <input
                   type="text"
                   required
-                  placeholder="Elena Rostova"
+                  placeholder=""
+                  autoComplete="off"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:border-purple-500"
@@ -164,13 +158,19 @@ export const RegisterPage: React.FC = () => {
 
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-slate-300">{t('reg_country', 'Country')}</label>
-                <input
-                  type="text"
-                  placeholder="United States"
+                <select
+                  aria-label="Country"
                   value={formData.country}
                   onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:border-purple-500"
-                />
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:border-purple-500 cursor-pointer"
+                >
+                  <option value="" className="bg-slate-950 text-slate-400" />
+                  {WORLD_COUNTRIES.map((countryName) => (
+                    <option key={countryName} value={countryName} className="bg-slate-950 text-white">
+                      {countryName}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
@@ -182,7 +182,8 @@ export const RegisterPage: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  placeholder={`${formData.name || 'Elena Rostova'} Media`}
+                  placeholder=""
+                  autoComplete="off"
                   value={formData.company}
                   onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:border-purple-500"
@@ -195,7 +196,8 @@ export const RegisterPage: React.FC = () => {
               <input
                 type="email"
                 required
-                placeholder="elena@example.com"
+                placeholder=""
+                autoComplete="off"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:border-purple-500"
@@ -209,7 +211,8 @@ export const RegisterPage: React.FC = () => {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
-                    placeholder={t('reg_password_placeholder', 'Min 6 characters')}
+                    placeholder=""
+                    autoComplete="new-password"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     className="w-full px-3.5 pr-10 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:border-purple-500 font-mono"
@@ -232,7 +235,8 @@ export const RegisterPage: React.FC = () => {
                   <input
                     type={showConfirmPassword ? 'text' : 'password'}
                     required
-                    placeholder={t('reg_confirm_password_placeholder', 'Re-enter password')}
+                    placeholder=""
+                    autoComplete="new-password"
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                     className="w-full px-3.5 pr-10 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:border-purple-500 font-mono"

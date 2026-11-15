@@ -107,6 +107,7 @@ interface AppContextType {
   currentUser: UserAccount;
   currentVendor: VendorAccount;
   firebaseUser: FirebaseUser | null;
+  authenticatedRole: UserRole | null;
   isFirebaseLoading: boolean;
 
   // Actions
@@ -175,7 +176,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [role, setRole] = useState<UserRole>('public');
+  const [role, setRoleState] = useState<UserRole>('public');
   const [publicPage, setPublicPage] = useState<PublicPage>('home');
   const [adminPage, setAdminPage] = useState<AdminPage>('overview');
   const [vendorPage, setVendorPage] = useState<VendorPage>('overview');
@@ -249,6 +250,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Firebase State
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+  const [authenticatedRole, setAuthenticatedRole] = useState<UserRole | null>(null);
   const [isFirebaseLoading, setIsFirebaseLoading] = useState<boolean>(true);
 
   const [currentUser, setCurrentUser] = useState<UserAccount>(INITIAL_USERS[0]);
@@ -454,25 +456,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (user) {
         try {
           const profile = await fetchRoleAndProfile(user.uid, user.email);
-          if (profile.role === 'admin') {
-            setRole('admin');
-            setAdminPage('overview');
-          } else if (profile.role === 'vendor') {
-            setRole('vendor');
-            setVendorPage('overview');
-            if (profile.vendorDoc) {
-              setCurrentVendor((prev) => ({ ...prev, ...profile.vendorDoc }));
-            }
-          } else if (profile.role === 'user') {
-            setRole('user');
-            setUserPage('overview');
-            if (profile.userDoc) {
-              setCurrentUser((prev) => ({ ...prev, ...profile.userDoc }));
-            }
+          setAuthenticatedRole(profile.role);
+          if (profile.role === 'vendor' && profile.vendorDoc) {
+            setCurrentVendor((prev) => ({ ...prev, ...profile.vendorDoc }));
+          } else if (profile.role === 'user' && profile.userDoc) {
+            setCurrentUser((prev) => ({ ...prev, ...profile.userDoc }));
           }
         } catch (err) {
           console.warn('Profile sync note:', err);
         }
+      } else {
+        setAuthenticatedRole(null);
+        setRoleState((prevRole) => (prevRole !== 'public' ? 'public' : prevRole));
       }
     });
 
@@ -520,14 +515,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => unsubWallet();
   }, [firebaseUser, currentUser?.id]);
 
+  const setRole = (targetRole: UserRole) => {
+    if (targetRole === 'public') {
+      setRoleState('public');
+      return;
+    }
+
+    if (!firebaseUser || authenticatedRole !== targetRole) {
+      setRoleState('public');
+      setPublicPage('login');
+      if (targetRole === 'vendor') {
+        setLoginRoleTab('vendor');
+        showToast('ভেন্ডোর পোর্টালে প্রবেশ করতে প্রথমে আপনার ভেন্ডোর অ্যাকাউন্ট দিয়ে লগইন করুন।', 'info');
+      } else if (targetRole === 'user') {
+        setLoginRoleTab('user');
+        showToast('ইউজার রিওয়ার্ড পোর্টালে প্রবেশ করতে প্রথমে আপনার ইউজার অ্যাকাউন্ট দিয়ে লগইন করুন।', 'info');
+      } else {
+        setLoginRoleTab('user');
+        showToast('অনুগ্রহ করে প্রথমে লগইন করুন।', 'info');
+      }
+      return;
+    }
+
+    setRoleState(targetRole);
+  };
+
   const openCampaignDetail = (id: string) => {
+    if (!firebaseUser || authenticatedRole !== 'user') {
+      setLoginRoleTab('user');
+      setRoleState('public');
+      setPublicPage('login');
+      showToast('ভিডিও দেখে পয়েন্ট অর্জন করতে প্রথমে আপনার ইউজার অ্যাকাউন্ট দিয়ে লগইন করুন।', 'info');
+      return;
+    }
     const target = campaigns.find((c) => c.id === id);
     if (target && target.isVisibleToUsers === false) {
       showToast('এই ভিডিওটি বর্তমানে অ্যাডমিন কর্তৃক বন্ধ (OFF) রাখা হয়েছে।', 'error');
       return;
     }
     setActiveCampaignId(id);
-    setRole('user');
+    setRoleState('user');
     setUserPage('campaign-detail');
   };
 
@@ -1516,7 +1543,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
       setCurrentUser(newViewerUser);
       setUsers((prev) => [newViewerUser, ...prev.filter((u) => u.id !== newViewerUser.id && u.email !== newViewerUser.email)]);
-      setRole('user');
+      setAuthenticatedRole('user');
+      setRoleState('user');
       setUserPage('overview');
       if (bonus > 0) {
         showToast(`Welcome ${name}! Account registered with Firebase. +${bonus} Welcome Bonus Points credited.`, 'success');
@@ -1557,7 +1585,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
       setCurrentVendor(newVendorAccount);
       setVendors((prev) => [newVendorAccount, ...prev.filter((v) => v.id !== newVendorAccount.id && v.email !== newVendorAccount.email)]);
-      setRole('vendor');
+      setAuthenticatedRole('vendor');
+      setRoleState('vendor');
       setVendorPage('overview');
       showToast(`Welcome ${finalCompanyName}! Vendor registered in Firebase. Pending verification.`, 'success');
       return true;
@@ -1572,7 +1601,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const normalizedEmail = email.trim().toLowerCase();
       const result = await loginWithEmail(email, pass);
-      setRole(result.role);
+      setAuthenticatedRole(result.role);
+      setRoleState(result.role);
       if (result.role === 'admin') setAdminPage('overview');
       if (result.role === 'vendor') setVendorPage('overview');
       if (result.role === 'user') setUserPage('overview');
@@ -1593,7 +1623,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const handleFirebaseGoogleLogin = async (): Promise<boolean> => {
     try {
       const result = await loginWithGoogle();
-      setRole(result.role);
+      setAuthenticatedRole(result.role);
+      setRoleState(result.role);
       if (result.role === 'admin') setAdminPage('overview');
       if (result.role === 'vendor') setVendorPage('overview');
       if (result.role === 'user') setUserPage('overview');
@@ -1613,7 +1644,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.warn('Firebase signout note:', err);
     } finally {
       setFirebaseUser(null);
-      setRole('public');
+      setAuthenticatedRole(null);
+      setRoleState('public');
       setPublicPage(targetPage);
       showToast('লগআউট সম্পন্ন হয়েছে। আপনি এখন পুনরায় লগইন করতে পারেন।', 'info');
     }
@@ -1634,7 +1666,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const success = await initializeAdminAccount(name);
       if (success) {
-        setRole('admin');
+        setAuthenticatedRole('admin');
+        setRoleState('admin');
         setAdminPage('overview');
         showToast('Admin account successfully initialized in Firebase Firestore!', 'success');
         return true;
@@ -1675,6 +1708,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         currentUser,
         currentVendor,
         firebaseUser,
+        authenticatedRole,
         isFirebaseLoading,
         addCampaign,
         approveCampaign,

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Settings, Shield, Sliders, Globe, Lock, Save, CheckCircle2, Server, CreditCard, Award, Smartphone, Megaphone, ExternalLink, Sparkles, Zap, Bell, Clock, Play } from 'lucide-react';
+import { Settings, Shield, Sliders, Globe, Lock, Save, CheckCircle2, Server, CreditCard, Award, Smartphone, Megaphone, ExternalLink, Sparkles, Zap, Bell, Clock, Play, Youtube, Trash2 } from 'lucide-react';
 import { VideoPlatform } from '../../types';
 import { AdBannerBox } from '../common/AdBannerBox';
 import { VideoSocialBarOverlay } from '../common/VideoSocialBarOverlay';
+import { TutorialVideoBox, extractYouTubeVideoId } from '../common/TutorialVideoBox';
 
 export const AdminSettings: React.FC = () => {
   const { settings, updateSettings, showToast } = useApp();
@@ -32,6 +33,9 @@ export const AdminSettings: React.FC = () => {
   const [socialBarLink, setSocialBarLink] = useState('');
   const [socialBarTarget, setSocialBarTarget] = useState('');
   const [socialBarEnabled, setSocialBarEnabled] = useState(settings.socialBarAd?.enabled !== false);
+
+  // Tutorial Video (YouTube URL for Public Website How It Works video box)
+  const [tutorialVideoInput, setTutorialVideoInput] = useState('');
 
   useEffect(() => {
     if (settings.adBox1) {
@@ -130,6 +134,24 @@ export const AdminSettings: React.FC = () => {
     showToast('Adsterra Social Bar / Popunder সফলভাবে ফায়ারবেসে সেভ হয়েছে এবং বক্স খালি করা হয়েছে!', 'success');
   };
 
+  const handleSaveTutorialVideo = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const trimmed = tutorialVideoInput.trim();
+    if (!trimmed) {
+      showToast('বক্সে কোনো তথ্য দেওয়া হয়নি! সেভ করতে আগে টিউটিরিয়াল ভিডিওর ইউটিউব লিংক দিন।', 'error');
+      return;
+    }
+    if (!extractYouTubeVideoId(trimmed)) {
+      showToast('অনুগ্রহ করে একটি সঠিক ইউটিউব ভিডিও লিংক (YouTube URL) দিন।', 'error');
+      return;
+    }
+    updateSettings({
+      tutorialVideoUrl: trimmed
+    });
+    setTutorialVideoInput('');
+    showToast('টিউটিরিয়াল ভিডিও লিংক সফলভাবে ফায়ারবেসে সেভ হয়েছে এবং Public Website-এ প্রদর্শিত হচ্ছে!', 'success');
+  };
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     const nextAdBox1 = adBox1Link.trim()
@@ -170,7 +192,10 @@ export const AdminSettings: React.FC = () => {
       minimumRedemptionPoints: Math.max(100, Number(formData.minimumRedemptionPoints) || 5000),
       ...(nextAdBox1 ? { adBox1: nextAdBox1 } : {}),
       ...(nextAdBox2 ? { adBox2: nextAdBox2 } : {}),
-      ...(nextSocialBar ? { socialBarAd: nextSocialBar } : {})
+      ...(nextSocialBar ? { socialBarAd: nextSocialBar } : {}),
+      ...(tutorialVideoInput.trim() && extractYouTubeVideoId(tutorialVideoInput.trim())
+        ? { tutorialVideoUrl: tutorialVideoInput.trim() }
+        : {})
     });
 
     if (adBox1Link.trim()) {
@@ -184,6 +209,9 @@ export const AdminSettings: React.FC = () => {
     if (socialBarLink.trim()) {
       setSocialBarLink('');
       setSocialBarTarget('');
+    }
+    if (tutorialVideoInput.trim() && extractYouTubeVideoId(tutorialVideoInput.trim())) {
+      setTutorialVideoInput('');
     }
 
     showToast('Platform settings successfully saved.', 'success');
@@ -863,6 +891,101 @@ export const AdminSettings: React.FC = () => {
               previewContent={adBox2Link.trim() ? adBox2Link : (settings.adBox2?.adLink || '')}
               previewTarget={adBox2Target.trim() ? adBox2Target : (settings.adBox2?.targetUrl || '')}
               className="my-0"
+            />
+          </div>
+        </div>
+
+        {/* টিউটিরিয়াল ভিডিও (Public Website How It Works Video Box) */}
+        <div className="p-6 rounded-2xl bg-slate-900/80 border border-rose-500/30 space-y-4 shadow-xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+            <div className="flex items-center gap-2">
+              <Youtube className="h-5 w-5 text-rose-400" />
+              <h2 className="text-sm sm:text-base font-bold text-white tracking-tight">
+                টিউটিরিয়াল ভিডিও
+              </h2>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {settings.tutorialVideoUrl && (
+                <span className="text-[10px] font-mono bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 px-2.5 py-0.5 rounded font-semibold">
+                  ✓ ফায়ারবেসে সেভ করা আছে
+                </span>
+              )}
+              <span className="text-[10px] font-mono bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2.5 py-0.5 rounded font-semibold uppercase">
+                Public Website — How It Works
+              </span>
+            </div>
+          </div>
+
+          <p className="text-xs text-slate-300 leading-relaxed">
+            এই লিংক বক্সে <strong className="text-rose-400">How It Works</strong> বিষয়ক ইউটিউব ভিডিও লিংক দিয়ে ডান পাশের <strong className="text-emerald-400">সেভ (Save)</strong> বাটনে ক্লিক করুন। লিংকটি সরাসরি ফায়ারবেসে সেভ হবে এবং <strong className="text-purple-300">Public Website</strong> এর ভিডিও বক্সে প্রদর্শিত হবে।
+          </p>
+
+          <div className="space-y-3 pt-1">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-2.5">
+              <div className="relative flex-1 space-y-1.5">
+                <input
+                  type="text"
+                  placeholder="নমুনা: https://www.youtube.com/watch?v=dQw4w9WgXcQ অথবা https://youtu.be/..."
+                  value={tutorialVideoInput}
+                  onChange={(e) => setTutorialVideoInput(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs sm:text-sm text-white placeholder:text-slate-400/35 focus:border-rose-500 focus:outline-none transition-colors font-mono"
+                />
+
+                {tutorialVideoInput.trim() && (
+                  <div className="flex items-center gap-1.5 text-[10.5px]">
+                    <span className="text-slate-400">লিংক যাচাই:</span>
+                    {extractYouTubeVideoId(tutorialVideoInput) ? (
+                      <span className="px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 font-mono font-bold">
+                        ✓ সঠিক ইউটিউব ভিডিও লিংক সনাক্ত হয়েছে
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded bg-rose-950/80 text-rose-300 border border-rose-500/40 font-mono font-bold">
+                        ✕ সঠিক ইউটিউব ভিডিও লিংক দিন
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleSaveTutorialVideo}
+                className="px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
+              >
+                <Save className="h-4 w-4" />
+                <span>সেভ (Save)</span>
+              </button>
+            </div>
+
+            {settings.tutorialVideoUrl && (
+              <div className="flex items-center justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    updateSettings({ tutorialVideoUrl: '' });
+                    showToast('টিউটিরিয়াল ভিডিও লিংক মুছে ফেলা হয়েছে।', 'info');
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-rose-950/60 text-slate-400 hover:text-rose-300 border border-slate-800 text-[10.5px] font-medium inline-flex items-center gap-1 cursor-pointer transition-colors"
+                >
+                  <Trash2 className="h-3 w-3" />
+                  <span>সেভকৃত টিউটিরিয়াল ভিডিও সরান</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Live Preview of Tutorial Video Box */}
+          <div className="pt-3 border-t border-slate-800/80 space-y-2">
+            <div className="flex items-center justify-between text-[11px] text-slate-400">
+              <span className="flex items-center gap-1 font-semibold text-rose-300">
+                <Sparkles className="h-3.5 w-3.5 text-rose-400" />
+                <span>টিউটিরিয়াল ভিডিও লাইভ প্রিভিউ (Public Website-এ যেভাবে দেখা যাবে)</span>
+              </span>
+            </div>
+
+            <TutorialVideoBox
+              previewUrl={tutorialVideoInput.trim() ? tutorialVideoInput.trim() : (settings.tutorialVideoUrl || '')}
+              compact
             />
           </div>
         </div>

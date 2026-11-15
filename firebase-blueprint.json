@@ -241,6 +241,7 @@
         "adBox1": { "type": "object" },
         "adBox2": { "type": "object" },
         "socialBarAd": { "type": "object" },
+        "tutorialVideoUrl": { "type": "string" },
         "updatedAt": { "type": "string" }
       },
       "required": ["siteName", "pointsToUsdRate", "minimumRedemptionPoints"]
